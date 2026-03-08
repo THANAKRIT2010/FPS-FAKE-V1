@@ -1,0 +1,321 @@
+-- =========================
+--        LOAD WIND UI
+-- =========================
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- =========================
+-- KEY SYSTEM
+-- =========================
+local CorrectKey = "freeThanakrit2010"
+local SavedInput = ""
+local Unlocked = false
+
+-- =========================
+-- CREATE WINDOW
+-- =========================
+local Window = WindUI:CreateWindow({
+    Title = "THANAKRIT HUB 😈",
+    Icon = "key",
+    Author = "By เสี๋ยคิวจัดให้ XD",
+    Folder = "MyHub",
+    Size = UDim2.fromOffset(580,400),
+    Theme = "Dark"
+})
+
+-- =========================
+-- KEY TAB
+-- =========================
+local KeyTab = Window:Tab({Title="Key System",Icon="key"})
+KeyTab:Section({Title="Enter Key"})
+
+KeyTab:Input({
+    Title="ใส่ Key",
+    Placeholder="Enter key...",
+    Callback=function(text)
+        SavedInput = text
+    end
+})
+
+KeyTab:Button({
+    Title="ตกลงเพื่อยืนยันคีย์",
+    Callback=function()
+
+        if SavedInput ~= CorrectKey then return end
+        if Unlocked then return end
+        Unlocked = true
+
+        -- =========================
+        -- AIM TAB
+        -- =========================
+        local AimTab = Window:Tab({Title="Aim Assist",Icon="target"})
+        AimTab:Section({Title="Aim Settings"})
+
+        local enabled = false
+        local strength = 0.2
+        local fov = 150
+
+        local circle = Drawing.new("Circle")
+        circle.Visible = false
+        circle.Color = Color3.fromRGB(255,0,0)
+        circle.Thickness = 2
+        circle.Filled = false
+        circle.Radius = fov
+
+        AimTab:Toggle({
+            Title="Aim Assist",
+            Default=false,
+            Callback=function(state)
+                enabled = state
+            end
+        })
+
+        AimTab:Input({
+            Title="Strength (0.05 - 1)",
+            Placeholder="0.2",
+            Callback=function(text)
+                local val = tonumber(text)
+                if val then
+                    strength = math.clamp(val,0.05,1)
+                end
+            end
+        })
+
+        AimTab:Toggle({
+            Title="Show FOV Circle",
+            Default=false,
+            Callback=function(state)
+                circle.Visible = state
+            end
+        })
+
+        AimTab:Input({
+            Title="FOV Size (5 - 400)",
+            Placeholder="150",
+            Callback=function(text)
+                local val = tonumber(text)
+                if val then
+                    fov = math.clamp(val,5,400)
+                    circle.Radius = fov
+                end
+            end
+        })
+
+        -- =========================
+        -- ESP TAB (NEW CATEGORY)
+        -- =========================
+        local ESPTab = Window:Tab({Title="ESP",Icon="eye"})
+        ESPTab:Section({Title="ESP Settings"})
+
+        local espRainbow = false
+        local espName = false
+        local espDistance = false
+        local espObjects = {}
+
+        ESPTab:Toggle({
+            Title="ESP Rainbow",
+            Default=false,
+            Callback=function(v)
+                espRainbow = v
+            end
+        })
+
+        ESPTab:Toggle({
+            Title="ESP Name",
+            Default=false,
+            Callback=function(v)
+                espName = v
+            end
+        })
+
+        ESPTab:Toggle({
+            Title="ESP Distance",
+            Default=false,
+            Callback=function(v)
+                espDistance = v
+            end
+        })
+
+        -- ================= TARGET CHECK =================
+        local function isVisible(targetPart)
+
+            local origin = camera.CFrame.Position
+            local direction = targetPart.Position - origin
+
+            local rayParams = RaycastParams.new()
+            rayParams.FilterDescendantsInstances = {player.Character}
+            rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+            local result = workspace:Raycast(origin,direction,rayParams)
+
+            if result then
+                return result.Instance:IsDescendantOf(targetPart.Parent)
+            end
+
+            return false
+        end
+
+        local function getClosestTarget()
+
+            local closest = nil
+            local shortest = fov
+
+            for _,npc in pairs(workspace:GetChildren()) do
+
+                if npc:FindFirstChild("Humanoid") and npc ~= player.Character then
+
+                    local head = npc:FindFirstChild("Head")
+
+                    if head and isVisible(head) then
+
+                        local screenPos,onScreen =
+                        camera:WorldToViewportPoint(head.Position)
+
+                        if onScreen then
+
+                            local dist =
+                            (Vector2.new(screenPos.X,screenPos.Y) -
+                            Vector2.new(camera.ViewportSize.X/2,
+                            camera.ViewportSize.Y/2)).Magnitude
+
+                            if dist < shortest then
+                                shortest = dist
+                                closest = head
+                            end
+
+                        end
+
+                    end
+
+                end
+
+            end
+
+            return closest
+        end
+
+        -- ================= ESP CREATE =================
+        local function createESP(character)
+
+            if not character or espObjects[character] then return end
+
+            local highlight = Instance.new("Highlight")
+            highlight.FillTransparency = 0.5
+            highlight.Parent = character
+
+            local billboard = Instance.new("BillboardGui")
+            billboard.Size = UDim2.new(0,200,0,50)
+            billboard.AlwaysOnTop = true
+            billboard.Parent = character:FindFirstChild("Head")
+
+            local text = Instance.new("TextLabel")
+            text.Size = UDim2.new(1,0,1,0)
+            text.BackgroundTransparency = 1
+            text.TextColor3 = Color3.new(1,1,1)
+            text.TextStrokeTransparency = 0
+            text.TextScaled = true
+            text.Parent = billboard
+
+            espObjects[character] = {
+                highlight = highlight,
+                label = text
+            }
+
+        end
+
+        -- ================= LOOP =================
+        RunService.RenderStepped:Connect(function()
+
+            circle.Position =
+            Vector2.new(camera.ViewportSize.X/2,
+                        camera.ViewportSize.Y/2)
+
+            local hue = tick()%5/5
+
+            for _,npc in pairs(workspace:GetChildren()) do
+
+                if npc:FindFirstChild("Humanoid") and npc ~= player.Character then
+
+                    local head = npc:FindFirstChild("Head")
+                    if not head then continue end
+
+                    if not espObjects[npc] then
+                        createESP(npc)
+                    end
+
+                    local data = espObjects[npc]
+
+                    if data then
+
+                        if espRainbow then
+                            local color = Color3.fromHSV(hue,1,1)
+                            data.highlight.FillColor = color
+                            data.highlight.OutlineColor = color
+                        else
+                            data.highlight.FillTransparency = 1
+                        end
+
+                        local text = ""
+
+                        if espName then
+                            text = npc.Name
+                        end
+
+                        if espDistance then
+                            local dist = math.floor(
+                                (head.Position - camera.CFrame.Position).Magnitude
+                            )
+                            text = text.." ["..dist.."m]"
+                        end
+
+                        data.label.Text = text
+
+                    end
+
+                end
+
+            end
+
+            if not enabled then return end
+
+            local target = getClosestTarget()
+
+            if target then
+
+                local targetCF =
+                CFrame.new(camera.CFrame.Position,
+                target.Position)
+
+                camera.CFrame =
+                camera.CFrame:Lerp(targetCF,strength)
+
+            end
+
+        end)
+
+    end
+})
+
+-- =========================
+-- SETTINGS TAB
+-- =========================
+local SettingsTab = Window:Tab({Title="Settings",Icon="settings"})
+
+SettingsTab:Button({
+    Title="รีเข้าแมพ",
+    Callback=function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId)
+    end
+})
+
+SettingsTab:Button({
+    Title="ปิด UI",
+    Callback=function()
+        local gui = player.PlayerGui:FindFirstChild("MyHub")
+        if gui then gui:Destroy() end
+    end
+})
