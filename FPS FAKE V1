@@ -11,7 +11,7 @@ local camera = workspace.CurrentCamera
 -- =========================
 -- KEY SYSTEM
 -- =========================
-local CorrectKey = "freeThanakrit2010"
+local CorrectKey = "free"
 local SavedInput = ""
 local Unlocked = false
 
