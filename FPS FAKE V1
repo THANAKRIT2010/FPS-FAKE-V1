@@ -319,3 +319,36 @@ SettingsTab:Button({
         if gui then gui:Destroy() end
     end
 })
+
+
+SettingsTab:Section({ Title = "Contact" })
+
+SettingsTab:Button({
+    Title = "คัดลอก IG 📸",
+    Callback = function()
+        if setclipboard then
+            setclipboard("https://www.instagram.com/ezmxyxii/") -- ใส่ IG ของคุณตรงนี้
+        end
+
+        WindUI:Notify({
+            Title = "สำเร็จ",
+            Description = "คัดลอก IG แล้ว ✅",
+            Duration = 2
+        })
+    end
+})
+
+SettingsTab:Button({
+    Title = "คัดลอก Discord 💬",
+    Callback = function()
+        if setclipboard then
+            setclipboard("https://discord.gg/XKJTssDUSR") -- ใส่ Discord ของคุณ
+        end
+
+        WindUI:Notify({
+            Title = "สำเร็จ",
+            Description = "คัดลอก Discord แล้ว ✅",
+            Duration = 2
+        })
+    end
+})
