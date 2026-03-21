@@ -303,7 +303,7 @@ KeyTab:Button({
 -- =========================
 -- SETTINGS TAB
 -- =========================
-local SettingsTab = Window:Tab({Title="Settings",Icon="settings"})
+local SettingsTab = Window:Tab({Title="Discrod & instagram",Icon="settings"})
 
 SettingsTab:Button({
     Title="รีเข้าแมพ",
